@@ -11,7 +11,11 @@
 
 #include <cstddef>
 
-#ifdef __unix__
+#if defined(__unix__) || defined(__APPLE__)
+#define __PLATFORM_UNIX__
+#endif
+
+#ifdef __PLATFORM_UNIX__
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -30,7 +34,7 @@ public:
     basic_memory_file(const char *pathname_) :
         _data(0),
         _size(0),
-#ifdef __unix__
+#ifdef __PLATFORM_UNIX__
         _fh(0)
 #else
         _fh(0),
@@ -49,7 +53,7 @@ public:
     {
         if (_data) close();
 
-#ifdef __unix__
+#ifdef __PLATFORM_UNIX__
         _fh = ::open(pathname_, O_RDONLY);
 
         if (_fh > -1)
@@ -103,7 +107,7 @@ public:
 
     void close()
     {
-#if defined(__unix__)
+#if defined(__PLATFORM_UNIX__)
         ::munmap(const_cast<char_type *>(_data), _size);
         ::close(_fh);
 #elif defined(_WIN32)
@@ -114,7 +118,7 @@ public:
         _data = 0;
         _size = 0;
         _fh = 0;
-#ifndef __unix__
+#ifndef __PLATFORM_UNIX__
         _fmh = 0;
 #endif
     }
@@ -122,7 +126,7 @@ public:
 private:
     const char_type *_data;
     std::size_t _size;
-#ifdef __unix__
+#ifdef __PLATFORM_UNIX__
     int _fh;
 #elif defined _WIN32
     HANDLE _fh;
